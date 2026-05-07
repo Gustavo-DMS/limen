@@ -149,6 +149,11 @@ func (h *DatabaseActionHelper) DeleteVerification(ctx context.Context, id any) e
 	})
 }
 
+func (h *DatabaseActionHelper) UpdateVerification(ctx context.Context, updatedVerification *Verification, conditions []Where) error {
+	verificationSchema := h.core.Schema.Verification
+	return h.core.Update(ctx, verificationSchema, updatedVerification, conditions)
+}
+
 func (h *DatabaseActionHelper) CreateSession(ctx context.Context, data *Session, additionalFields map[string]any) error {
 	if err := h.core.Create(ctx, h.core.Schema.Session, data, additionalFields); err != nil {
 		return err
