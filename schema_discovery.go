@@ -88,7 +88,12 @@ func applyPluginCustomizations(def *SchemaDefinition, pluginName PluginName, sch
 }
 
 func processPluginSchemas(plugin Plugin, schemaConfig *SchemaConfig, schemas map[SchemaName]SchemaDefinition) error {
-	pluginSchemas := plugin.GetSchemas(schemaConfig)
+	provider, ok := plugin.(SchemaProvider)
+	if !ok {
+		return nil
+	}
+
+	pluginSchemas := provider.GetSchemas(schemaConfig)
 	for _, introspector := range pluginSchemas {
 		def := introspector.(*SchemaDefinition)
 		def.PluginName = string(plugin.Name())

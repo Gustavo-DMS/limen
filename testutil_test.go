@@ -77,10 +77,6 @@ func (p *testPlugin) PluginHTTPConfig() PluginHTTPConfig {
 	}
 }
 
-func (p *testPlugin) GetSchemas(schema *SchemaConfig) []SchemaIntrospector {
-	return []SchemaIntrospector{}
-}
-
 func (p *testPlugin) RegisterRoutes(httpCore *LimenHTTPCore, routeBuilder *RouteBuilder) {
 	routeBuilder.AddRoute(MethodGET, "/test", RouteID("test"), func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

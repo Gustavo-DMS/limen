@@ -10,6 +10,11 @@ type Plugin interface {
 	PluginHTTPConfig() PluginHTTPConfig
 	// RegisterRoutes registers routes for the plugin.
 	RegisterRoutes(httpCore *LimenHTTPCore, routeBuilder *RouteBuilder)
+}
+
+// SchemaProvider is an optional interface that plugins can implement to
+// contribute or modify database schemas.
+type SchemaProvider interface {
 	// GetSchemas returns all schemas provided by this plugin.
 	// Returns a map of schema name to SchemaIntrospector.
 	// Plugins can extend core schemas by setting Extends field, or create new tables.
