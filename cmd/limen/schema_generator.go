@@ -66,7 +66,7 @@ func generateStructField(buf *strings.Builder, field limen.ColumnDefinition, opt
 
 	tags := strings.Join(tagParts, " ")
 
-	goType := string(field.Type)
+	goType := columnTypeToGoType(field.Type)
 	if field.IsNullable && !strings.HasPrefix(goType, "*") && goType != "any" {
 		goType = "*" + goType
 	}
@@ -76,4 +76,13 @@ func generateStructField(buf *strings.Builder, field limen.ColumnDefinition, opt
 		buf.WriteString(" // primary key")
 	}
 	buf.WriteString("\n")
+}
+
+func columnTypeToGoType(ct limen.ColumnType) string {
+	switch ct {
+	case limen.ColumnTypeText, limen.ColumnTypeUUID:
+		return "string"
+	default:
+		return string(ct)
+	}
 }
