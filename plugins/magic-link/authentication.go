@@ -53,7 +53,7 @@ func (p *magicLinkPlugin) RequestMagicLink(ctx context.Context, email string, op
 }
 
 // VerifyMagicLink consumes one allowed use of a magic-link token and returns an auth result.
-func (p *magicLinkPlugin) VerifyMagicLink(ctx context.Context, token string) (*limen.AuthenticationResult, *magicLinkState, error) {
+func (p *magicLinkPlugin) VerifyMagicLink(ctx context.Context, token string) (*limen.AuthenticationResult, *MagicLinkState, error) {
 	tokenHash := p.generateTokenHash(token)
 	verification, err := p.validateToken(ctx, tokenHash)
 	if err != nil {
@@ -75,7 +75,7 @@ func (p *magicLinkPlugin) handleVerifyMagicLinkError(ctx context.Context, verifi
 	return p.dbAction.DeleteVerification(ctx, verification.ID)
 }
 
-func (p *magicLinkPlugin) validateMagicLinkState(ctx context.Context, verification *limen.Verification) (*limen.AuthenticationResult, *magicLinkState, error) {
+func (p *magicLinkPlugin) validateMagicLinkState(ctx context.Context, verification *limen.Verification) (*limen.AuthenticationResult, *MagicLinkState, error) {
 	state, err := decodeMagicLinkState(verification.Value)
 	if err != nil {
 		return nil, nil, err
@@ -138,7 +138,7 @@ func (p *magicLinkPlugin) markEmailVerified(ctx context.Context, user *limen.Use
 	})
 }
 
-func (p *magicLinkPlugin) consumeMagicLink(ctx context.Context, verification *limen.Verification, state *magicLinkState) error {
+func (p *magicLinkPlugin) consumeMagicLink(ctx context.Context, verification *limen.Verification, state *MagicLinkState) error {
 	state.UsedCount++
 
 	if state.UsedCount >= p.config.maxUses {

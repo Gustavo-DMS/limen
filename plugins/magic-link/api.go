@@ -9,8 +9,8 @@ import (
 // API is the public interface for the magic-link plugin.
 // Call Use to obtain a type-safe reference from a Limen instance.
 type API interface {
-	RequestMagicLink(ctx context.Context, email string, opts ...*RequestMagicLinkOptions) (*limen.Verification, error)
-	VerifyMagicLink(ctx context.Context, token string) (*limen.AuthenticationResult, *magicLinkState, error)
+	RequestMagicLink(ctx context.Context, email string, opts ...*RequestMagicLinkOptions) (*MagicLinkMessage, error)
+	VerifyMagicLink(ctx context.Context, token string) (*limen.AuthenticationResult, *MagicLinkState, error)
 }
 
 // Use returns a type-safe API for the magic-link plugin.

@@ -13,7 +13,11 @@ import (
 	"github.com/thecodearcher/limen"
 )
 
-type magicLinkState struct {
+// MagicLinkState is the per-request state persisted alongside a magic-link
+// verification token. It captures the redirect targets supplied at request
+// time and information resolved during verification (such as whether the
+// sign-in was for a newly created user).
+type MagicLinkState struct {
 	Email              string         `json:"e"`
 	UsedCount          int            `json:"c"`
 	RedirectURI        string         `json:"r,omitempty"`
@@ -24,11 +28,11 @@ type magicLinkState struct {
 	IsNewUser          bool           `json:"-"`
 }
 
-func (p *magicLinkPlugin) newMagicLinkState(email string, opts *RequestMagicLinkOptions) *magicLinkState {
+func (p *magicLinkPlugin) newMagicLinkState(email string, opts *RequestMagicLinkOptions) *MagicLinkState {
 	if opts == nil {
 		opts = &RequestMagicLinkOptions{}
 	}
-	state := &magicLinkState{
+	state := &MagicLinkState{
 		Email:              email,
 		UsedCount:          0,
 		RedirectURI:        opts.RedirectURI,
@@ -41,7 +45,7 @@ func (p *magicLinkPlugin) newMagicLinkState(email string, opts *RequestMagicLink
 	return state
 }
 
-func encodeMagicLinkState(state *magicLinkState) (string, error) {
+func encodeMagicLinkState(state *MagicLinkState) (string, error) {
 	raw, err := json.Marshal(state)
 	if err != nil {
 		return "", err
@@ -49,8 +53,8 @@ func encodeMagicLinkState(state *magicLinkState) (string, error) {
 	return string(raw), nil
 }
 
-func decodeMagicLinkState(value string) (*magicLinkState, error) {
-	var state magicLinkState
+func decodeMagicLinkState(value string) (*MagicLinkState, error) {
+	var state MagicLinkState
 	if err := json.Unmarshal([]byte(value), &state); err != nil {
 		return nil, err
 	}

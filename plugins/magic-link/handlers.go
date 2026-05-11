@@ -78,7 +78,7 @@ func (h *magicLinkHandlers) VerifyMagicLink(w http.ResponseWriter, r *http.Reque
 	h.handleVerifyMagicLinkSuccess(w, r, result, sessionResult, callbackURL, errorCallbackURL)
 }
 
-func (h *magicLinkHandlers) resolveCallbackURLs(state *magicLinkState) (string, string) {
+func (h *magicLinkHandlers) resolveCallbackURLs(state *MagicLinkState) (string, string) {
 	callbackURL := ""
 	errorCallbackURL := ""
 	if state != nil {
