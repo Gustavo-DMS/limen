@@ -12,6 +12,8 @@
   <a href="https://limenauth.dev">Documentation</a>
   ·
   <a href="https://github.com/thecodearcher/limen/issues">Issues</a>
+  ·
+  <a href="https://x.com/limenauth">X (@limenauth)</a>
 </p>
 
 <p align="center">
