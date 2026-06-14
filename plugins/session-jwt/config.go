@@ -18,6 +18,7 @@ type config struct {
 	refreshTokenDuration time.Duration
 	refreshTokenRotation bool
 	customClaims         func(user *limen.User) map[string]any
+	userFromClaims       func(claims *LimenClaims) map[string]any
 	issuer               string
 	audience             []string
 	blacklistEnabled     bool
@@ -99,6 +100,15 @@ func WithCustomClaims(fn func(user *limen.User) map[string]any) ConfigOption {
 	}
 }
 
+// WithUserFromClaims projects verified JWT claims onto the reconstructed user (no DB
+// lookup when refreshUser is false). Keys must match serialized column names; id, email,
+// and email_verified_at always come from the token. Pair with WithCustomClaims.
+func WithUserFromClaims(fn func(claims *LimenClaims) map[string]any) ConfigOption {
+	return func(c *config) {
+		c.userFromClaims = fn
+	}
+}
+
 // WithIssuer sets the "iss" claim on every JWT.
 func WithIssuer(issuer string) ConfigOption {
 	return func(c *config) {
@@ -149,8 +159,16 @@ func WithSubject(fn func(user *limen.User) string) ConfigOption {
 	}
 }
 
-// WithSubjectResolver sets a function that converts a JWT "sub" claim
-// back to a user ID value or Return limen.User which will be used to populate the User field on the ValidatedSession.
+// WithSubjectResolver sets a function that converts a JWT "sub" claim back into the
+// value used to populate the User field on the ValidatedSession. It may return:
+//
+//   - a user id (the default) — reconstructed from the JWT claims, or loaded from the
+//     database when WithRefreshUser is enabled;
+//   - a map[string]any raw user row keyed by the configured column names — built into a
+//     User directly, so responses such as /me can expose custom fields without a
+//     database round-trip;
+//   - a *limen.User loaded from storage (which already carries its full row).
+//
 // Default: returns the subject string as-is.
 func WithSubjectResolver(fn func(subject string) (any, error)) ConfigOption {
 	return func(c *config) {
