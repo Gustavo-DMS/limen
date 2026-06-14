@@ -177,10 +177,14 @@ func WithSubjectResolver(fn func(subject string) (any, error)) ConfigOption {
 }
 
 // WithRefreshUser controls whether ValidateSession fetches a fresh user
-// from the database after verifying the JWT (default: false).
+// from the database after verifying the JWT (default: true).
 // When enabled, user-specific fields (email, etc.) are omitted from the
 // JWT to reduce token size, and the full user is loaded from the DB on
 // every validation call.
+//
+// Beware when disabling this that this can cause issues with plugins that rely on data that is not available in the JWT.
+// For example, the two-factor plugin will not be able to get the user's two-factor status from the JWT if this is disabled.
+// So you either add the needed fields as custom claims or you keep this enabled.
 func WithRefreshUser(enabled bool) ConfigOption {
 	return func(c *config) {
 		c.refreshUser = enabled
