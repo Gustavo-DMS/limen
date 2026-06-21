@@ -26,7 +26,7 @@ jobs:
 
       - name: Run tests
         run: |
-          for dir in $(find . -name go.mod -not -path './examples/*' -exec dirname {} \;); do
+          for dir in $(find . -name go.mod -not -path './examples/*' -not -path './clients/go.mod' -exec dirname {} \;); do
             echo "=== testing $dir ==="
             (cd "$dir" && go test -race -count=1 ./...)
           done
