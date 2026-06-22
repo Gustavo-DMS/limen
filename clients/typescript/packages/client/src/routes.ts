@@ -1,6 +1,6 @@
 import type { RouteContext } from "./context";
-import type { InferPluginContribution } from "./define-plugin";
 import { defineClientPlugin, defineRoutes } from "./define-plugin";
+import type { InferPluginContribution } from "./infer";
 import { route } from "./route";
 import type { Session } from "./types";
 

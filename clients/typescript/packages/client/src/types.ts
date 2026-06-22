@@ -1,6 +1,7 @@
 import type { ReadableAtom } from "nanostores";
-import type { AnyClientPlugin, CombinedClientContributions } from "./define-plugin";
+import type { AnyClientPlugin } from "./define-plugin";
 import type { FetcherFetchOptions } from "./fetcher";
+import type { CombinedClientContributions, InferUserFields } from "./infer";
 import type { PluginOverrides } from "./plugin";
 import type { CoreContribution } from "./routes";
 import type { SessionState } from "./session-store";
@@ -19,9 +20,9 @@ export type CreateAuthClientOptions<Plugins extends readonly AnyClientPlugin[], 
    * Optional transformer for non-default session payloads.
    *
    * Provide this when your server returns custom user/session fields. It must
-   * map the raw response into `Session<TFields>`.
+   * map the raw response into `Session<InferUserFields<Plugins, TFields>>`.
    */
-  parseSession?: ParseSession<TFields>;
+  parseSession?: ParseSession<InferUserFields<Plugins, TFields>>;
   /**
    * How the SDK navigates the browser when a flow hands control to an external
    * page (e.g. an OAuth provider's authorization URL). Defaults to
@@ -47,7 +48,7 @@ export type CreateAuthClientOptions<Plugins extends readonly AnyClientPlugin[], 
    * avoid a hydration flash. When provided, lazy hydration is skipped until you
    * call `getSession()` or the store revalidates.
    */
-  initialSession?: Session<TFields> | null;
+  initialSession?: Session<InferUserFields<Plugins, TFields>> | null;
   /**
    * Keep session state in sync across browser tabs.
    * Enabled by default in browsers. Set `false` to disable.
@@ -68,8 +69,8 @@ export type AuthClient<Plugins extends readonly AnyClientPlugin[], TFields = unk
      * Reactive session store holding `{ data, isPending, error }`. Read it with
      * `.get()` / `.listen()` or a framework `useStore`.
      */
-    readonly $session: ReadableAtom<SessionState<TFields>>;
-  } & CoreContribution<TFields> &
+    readonly $session: ReadableAtom<SessionState<InferUserFields<Plugins, TFields>>>;
+  } & CoreContribution<InferUserFields<Plugins, TFields>> &
     CombinedClientContributions<Plugins>
 >;
 

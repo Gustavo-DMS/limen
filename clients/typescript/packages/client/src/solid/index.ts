@@ -1,6 +1,7 @@
 import type { Accessor } from "solid-js";
 import { createAuthClient as createCoreClient } from "../client";
 import type { AnyClientPlugin } from "../define-plugin";
+import type { InferUserFields } from "../infer";
 import type { SessionState } from "../session-store";
 import type { Prettify } from "../type-utils";
 import type { AuthClient, CreateAuthClientOptions } from "../types";
@@ -15,7 +16,7 @@ export type SolidAuthClient<Plugins extends readonly AnyClientPlugin[], TFields 
      * Reactively read the session store as a Solid accessor. Updates whenever
      * `{ data, isPending, error }` changes.
      */
-    useSession: () => Accessor<SessionState<TFields>>;
+    useSession: () => Accessor<SessionState<InferUserFields<Plugins, TFields>>>;
   }
 >;
 
@@ -26,7 +27,7 @@ export function createAuthClient<const Plugins extends readonly AnyClientPlugin[
   opts: CreateAuthClientOptions<Plugins, TFields>,
 ): SolidAuthClient<Plugins, TFields> {
   const client = createCoreClient<Plugins, TFields>(opts);
-  const useSession = (): Accessor<SessionState<TFields>> => useStore(client.$session);
+  const useSession = (): Accessor<SessionState<InferUserFields<Plugins, TFields>>> => useStore(client.$session);
 
   return Object.assign(client, { useSession }) as SolidAuthClient<Plugins, TFields>;
 }

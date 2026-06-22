@@ -22,12 +22,12 @@ export type {
   RouteMatcher,
 } from "./plugin";
 
-export { defineClientPlugin, defineRoutes } from "./define-plugin";
+export { defineClientPlugin, defineRoutes, schema } from "./define-plugin";
 export { route } from "./route";
 export { defaultSerialize } from "./serialize";
 
 export type { AnyRouteContext, RouteContext } from "./context";
-export type { RunRoute } from "./define-plugin";
+export type { PluginSchema, RunRoute } from "./define-plugin";
 export type { RouteCallOptions, RouteHandler } from "./route";
 
 export { coreClientPlugin } from "./routes";

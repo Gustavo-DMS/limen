@@ -1,6 +1,7 @@
 import type { Readable } from "svelte/store";
 import { createAuthClient as createCoreClient } from "../client";
 import type { AnyClientPlugin } from "../define-plugin";
+import type { InferUserFields } from "../infer";
 import type { SessionState } from "../session-store";
 import type { Prettify } from "../type-utils";
 import type { AuthClient, CreateAuthClientOptions } from "../types";
@@ -14,7 +15,7 @@ export type SvelteAuthClient<Plugins extends readonly AnyClientPlugin[], TFields
      * The reactive session as a Svelte readable store. Use it with `$`:
      * `$session.data`, `$session.isPending`, `$session.error`.
      */
-    useSession: () => Readable<SessionState<TFields>>;
+    useSession: () => Readable<SessionState<InferUserFields<Plugins, TFields>>>;
   }
 >;
 
@@ -29,8 +30,8 @@ export function createAuthClient<const Plugins extends readonly AnyClientPlugin[
   opts: CreateAuthClientOptions<Plugins, TFields>,
 ): SvelteAuthClient<Plugins, TFields> {
   const client = createCoreClient<Plugins, TFields>(opts);
-  const useSession = (): Readable<SessionState<TFields>> =>
-    client.$session as unknown as Readable<SessionState<TFields>>;
+  const useSession = (): Readable<SessionState<InferUserFields<Plugins, TFields>>> =>
+    client.$session as unknown as Readable<SessionState<InferUserFields<Plugins, TFields>>>;
 
   return Object.assign(client, { useSession }) as SvelteAuthClient<Plugins, TFields>;
 }

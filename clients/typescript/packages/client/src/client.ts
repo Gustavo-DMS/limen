@@ -42,6 +42,7 @@ export function createAuthClient<const Plugins extends readonly AnyClientPlugin[
     parseSession,
     setSession: (session) => store.setData(session),
     refetchSession: () => store.refetch(),
+    currentSession: () => store.$session.get().data,
     store,
   };
 

@@ -25,6 +25,8 @@ export type RouteContext<TFields = unknown> = {
   setSession: (session: Session<TFields> | null) => void;
   /** Revalidate the current session. */
   refetchSession: () => Promise<void>;
+  /** Return the current session store value. */
+  readonly currentSession: () => Session<TFields> | null;
   /** Reactive session store. */
   readonly store: SessionStore<TFields>;
 };

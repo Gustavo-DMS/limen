@@ -1,5 +1,6 @@
+import type { ClientPlugin, PluginSchema } from "./define-plugin";
 import type { InputOf, OutputOf, RouteCallOptions } from "./route";
-import type { KebabToCamel, Split, UnionToIntersection } from "./type-utils";
+import type { IsAny, KebabToCamel, Split, UnionToIntersection } from "./type-utils";
 
 type IsParam<S extends string> = S extends `:${string}` ? true : false;
 
@@ -67,3 +68,47 @@ type InferOneRoute<R, BasePrefix extends readonly string[]> =
 export type InferRoutes<Routes extends readonly unknown[], BasePrefix extends readonly string[]> = UnionToIntersection<
   { [K in keyof Routes]: InferOneRoute<Routes[K], BasePrefix> }[number]
 >;
+
+/**
+ * The client-only methods a plugin contributes. Widened `any` contributes
+ * nothing so the client does not become permissive.
+ */
+type ActionsOf<P> = P extends { actions?: (ctx: never, run: never) => infer A }
+  ? IsAny<A> extends true
+    ? unknown
+    : A extends object
+      ? A
+      : unknown
+  : unknown;
+
+export type InferPluginContribution<P> =
+  P extends ClientPlugin<infer _Id, infer BasePath, infer Routes, infer _Actions, infer _Schema>
+    ? InferRoutes<Routes, PathSegments<BasePath>> & ActionsOf<P>
+    : unknown;
+
+export type CombinedClientContributions<Plugins extends readonly unknown[]> = UnionToIntersection<
+  { [K in keyof Plugins]: InferPluginContribution<Plugins[K]> }[number]
+>;
+
+/**
+ * The extra fields a plugin contributes to one model (`M`) via `schema`. Widened
+ * `any` and non-object declarations contribute nothing, so the folded type never
+ * collapses into an open index signature.
+ */
+type ModelFieldsOf<P, M extends keyof PluginSchema> = P extends { schema?: infer S }
+  ? IsAny<S> extends true
+    ? Record<never, never>
+    : S extends Record<M, infer F>
+      ? F extends object
+        ? F
+        : Record<never, never>
+      : Record<never, never>
+  : Record<never, never>;
+
+/** Intersection of every registered plugin's contributions to one model. */
+export type PluginModelFields<Plugins extends readonly unknown[], M extends keyof PluginSchema> = UnionToIntersection<
+  { [K in keyof Plugins]: ModelFieldsOf<Plugins[K], M> }[number]
+>;
+
+/** A consumer's `TFields` widened with all plugin-contributed `user` fields. */
+export type InferUserFields<Plugins extends readonly unknown[], TFields> = TFields & PluginModelFields<Plugins, "user">;

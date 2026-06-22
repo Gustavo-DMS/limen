@@ -29,7 +29,7 @@ async function runHttp(ctx: AnyRouteContext, def: AnyRoute, input: unknown): Pro
 
   const raw = await ctx.fetch<unknown>(path, init);
 
-  if (def.parseSession === true) {
+  if (def.parseSession === true && isSessionResponse(raw)) {
     return ctx.parseSession(raw);
   }
 
@@ -44,10 +44,8 @@ async function applyEffects(ctx: AnyRouteContext, def: AnyRoute, result: unknown
     ctx.store.setData(null);
   }
 
-  if (def.parseSession === true && def.skipStore !== true) {
-    if (result !== null && typeof result === "object" && "user" in result) {
-      ctx.store.setData(result as Session<unknown>);
-    }
+  if (def.parseSession === true && def.skipStore !== true && isSessionResponse(result)) {
+    ctx.store.setData(result);
   }
 
   if (def.refetchSession === true) {
@@ -59,6 +57,10 @@ function makeHttpRunner(ctx: AnyRouteContext, def: AnyRoute, boundInput: unknown
   const run = (override?: unknown): Promise<unknown> =>
     runHttp(ctx, def, override === undefined ? boundInput : override);
   return run as HttpRunner<unknown>;
+}
+
+function isSessionResponse(raw: unknown): raw is Session<unknown> {
+  return typeof raw === "object" && raw !== null && "user" in raw;
 }
 
 /**

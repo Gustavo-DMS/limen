@@ -1,4 +1,4 @@
-import { defineClientPlugin, defineRoutes } from "../../define-plugin";
+import { defineClientPlugin, defineRoutes, schema } from "../../define-plugin";
 import { route } from "../../route";
 import type { Session } from "../../types";
 import type {
@@ -58,6 +58,7 @@ export function twoFactorPlugin<TFields = unknown>(config: TwoFactorConfig) {
     id: "two-factor",
     basePath: "/two-factor",
     routes,
+    schema: schema<{ user: { twoFactorEnabled: boolean } }>(),
     hooks: {
       afterResponse: [
         {
@@ -71,6 +72,13 @@ export function twoFactorPlugin<TFields = unknown>(config: TwoFactorConfig) {
           },
         },
       ],
+    },
+    actions: (ctx) => {
+      return {
+        twoFactor: {
+          isTwoFactorEnabled: () => ctx.currentSession()?.user.twoFactorEnabled,
+        },
+      };
     },
   });
 }
