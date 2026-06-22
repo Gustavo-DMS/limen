@@ -20,9 +20,9 @@ export type CreateAuthClientOptions<Plugins extends readonly AnyClientPlugin[], 
    * Optional transformer for non-default session payloads.
    *
    * Provide this when your server returns custom user/session fields. It must
-   * map the raw response into `Session<InferUserFields<Plugins, TFields>>`.
+   * map the raw response into `Session`.
    */
-  parseSession?: ParseSession<InferUserFields<Plugins, TFields>>;
+  parseSession?: ParseSession<PrettyUserFields<Plugins, TFields>>;
   /**
    * How the SDK navigates the browser when a flow hands control to an external
    * page (e.g. an OAuth provider's authorization URL). Defaults to
@@ -48,7 +48,7 @@ export type CreateAuthClientOptions<Plugins extends readonly AnyClientPlugin[], 
    * avoid a hydration flash. When provided, lazy hydration is skipped until you
    * call `getSession()` or the store revalidates.
    */
-  initialSession?: Session<InferUserFields<Plugins, TFields>> | null;
+  initialSession?: Session<PrettyUserFields<Plugins, TFields>> | null;
   /**
    * Keep session state in sync across browser tabs.
    * Enabled by default in browsers. Set `false` to disable.
@@ -61,6 +61,10 @@ export type CreateAuthClientOptions<Plugins extends readonly AnyClientPlugin[], 
   refetchOnWindowFocus?: boolean;
 };
 
+export type PrettyUserFields<Plugins extends readonly AnyClientPlugin[], TFields> = Prettify<
+  InferUserFields<Plugins, TFields>
+>;
+
 export type AuthClient<Plugins extends readonly AnyClientPlugin[], TFields = unknown> = Prettify<
   {
     readonly baseURL: string;
@@ -69,8 +73,8 @@ export type AuthClient<Plugins extends readonly AnyClientPlugin[], TFields = unk
      * Reactive session store holding `{ data, isPending, error }`. Read it with
      * `.get()` / `.listen()` or a framework `useStore`.
      */
-    readonly $session: ReadableAtom<SessionState<InferUserFields<Plugins, TFields>>>;
-  } & CoreContribution<InferUserFields<Plugins, TFields>> &
+    readonly $session: ReadableAtom<SessionState<PrettyUserFields<Plugins, TFields>>>;
+  } & CoreContribution<PrettyUserFields<Plugins, TFields>> &
     CombinedClientContributions<Plugins>
 >;
 

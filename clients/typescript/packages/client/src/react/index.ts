@@ -1,9 +1,8 @@
 import { createAuthClient as createCoreClient } from "../client";
 import type { AnyClientPlugin } from "../define-plugin";
-import type { InferUserFields } from "../infer";
 import type { SessionState } from "../session-store";
 import type { Prettify } from "../type-utils";
-import type { AuthClient, CreateAuthClientOptions } from "../types";
+import type { AuthClient, CreateAuthClientOptions, PrettyUserFields } from "../types";
 import { useStore } from "./react-store";
 
 /**
@@ -15,7 +14,7 @@ export type ReactAuthClient<Plugins extends readonly AnyClientPlugin[], TFields 
      * Reactively read the session store. Re-renders the component whenever
      * `{ data, isPending, error }` changes.
      */
-    useSession: () => SessionState<InferUserFields<Plugins, TFields>>;
+    useSession: () => SessionState<PrettyUserFields<Plugins, TFields>>;
   }
 >;
 
@@ -26,7 +25,7 @@ export function createAuthClient<const Plugins extends readonly AnyClientPlugin[
   opts: CreateAuthClientOptions<Plugins, TFields>,
 ): ReactAuthClient<Plugins, TFields> {
   const client = createCoreClient<Plugins, TFields>(opts);
-  const useSession = (): SessionState<InferUserFields<Plugins, TFields>> => useStore(client.$session);
+  const useSession = (): SessionState<PrettyUserFields<Plugins, TFields>> => useStore(client.$session);
 
   return Object.assign(client, { useSession }) as ReactAuthClient<Plugins, TFields>;
 }

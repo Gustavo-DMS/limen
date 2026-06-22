@@ -1,6 +1,7 @@
 import type { ClientPlugin, PluginSchema } from "./define-plugin";
 import type { InputOf, OutputOf, RouteCallOptions } from "./route";
 import type { IsAny, KebabToCamel, Split, UnionToIntersection } from "./type-utils";
+import type { User } from "./types";
 
 type IsParam<S extends string> = S extends `:${string}` ? true : false;
 
@@ -111,4 +112,5 @@ export type PluginModelFields<Plugins extends readonly unknown[], M extends keyo
 >;
 
 /** A consumer's `TFields` widened with all plugin-contributed `user` fields. */
-export type InferUserFields<Plugins extends readonly unknown[], TFields> = TFields & PluginModelFields<Plugins, "user">;
+export type InferUserFields<Plugins extends readonly unknown[], TFields> = User<TFields> &
+  PluginModelFields<Plugins, "user">;

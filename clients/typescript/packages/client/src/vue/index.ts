@@ -1,9 +1,8 @@
 import { createAuthClient as createCoreClient } from "../client";
 import type { AnyClientPlugin } from "../define-plugin";
-import type { InferUserFields } from "../infer";
 import type { SessionState } from "../session-store";
 import type { Prettify } from "../type-utils";
-import type { AuthClient, CreateAuthClientOptions } from "../types";
+import type { AuthClient, CreateAuthClientOptions, PrettyUserFields } from "../types";
 import type { ReactiveValue } from "./vue-store";
 import { useStore } from "./vue-store";
 
@@ -16,7 +15,7 @@ export type VueAuthClient<Plugins extends readonly AnyClientPlugin[], TFields = 
      * Reactively read the session store as a readonly ref. Updates whenever
      * `{ data, isPending, error }` changes.
      */
-    useSession: () => ReactiveValue<SessionState<InferUserFields<Plugins, TFields>>>;
+    useSession: () => ReactiveValue<SessionState<PrettyUserFields<Plugins, TFields>>>;
   }
 >;
 
@@ -27,7 +26,7 @@ export function createAuthClient<const Plugins extends readonly AnyClientPlugin[
   opts: CreateAuthClientOptions<Plugins, TFields>,
 ): VueAuthClient<Plugins, TFields> {
   const client = createCoreClient<Plugins, TFields>(opts);
-  const useSession = (): ReactiveValue<SessionState<InferUserFields<Plugins, TFields>>> => useStore(client.$session);
+  const useSession = (): ReactiveValue<SessionState<PrettyUserFields<Plugins, TFields>>> => useStore(client.$session);
 
   return Object.assign(client, { useSession }) as VueAuthClient<Plugins, TFields>;
 }
