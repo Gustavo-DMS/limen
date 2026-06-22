@@ -1,23 +1,20 @@
+import { DEFAULT_TIMEOUT_MS } from "./constants";
 import { unwrapErrorMessage, unwrapPayload } from "./envelope";
 import { LimenError, deriveErrorCode } from "./errors";
 import { ensureLeadingSlash, joinURL, stripTrailingSlash } from "./helpers";
 import type { HookRunner } from "./hooks";
-import type { FetchInit, RequestContext, ResponseContext } from "./plugin";
-import type { EnvelopeConfig, HTTPMethod } from "./types";
+import type { FetchInit, FetchOptions, RequestContext, ResponseContext } from "./plugin";
+import type { EnvelopeConfig } from "./types";
 
-type ClientFetchCallbackContext = ResponseContext & {};
-
-export type FetcherFetchOptions = {
+export type FetcherFetchOptions = FetchOptions & {
   /** Whether to send credentials (cookies). Defaults to `"include"`. */
   credentials?: RequestCredentials;
   /** Custom fetch impl. Defaults to `globalThis.fetch`. */
   impl?: typeof fetch;
-  /** Default headers merged into every request. Per-request headers override these. */
-  headers?: HeadersInit;
   /** Callback function to be called when the request is successful. */
-  onSuccess?: (context: ClientFetchCallbackContext & { response: Response }) => void;
+  onSuccess?: (context: ResponseContext & { response: Response }) => void;
   /** Callback function to be called when the request fails. */
-  onError?: (context: ClientFetchCallbackContext & { error: Error }) => void;
+  onError?: (context: ResponseContext & { error: Error }) => void;
 };
 
 type FetcherOptions = {
@@ -38,115 +35,114 @@ export class Fetcher {
   }
 
   async fetch<T>(path: string, init?: FetchInit, routePath: string = path): Promise<T> {
-    const method: HTTPMethod = init?.method ?? (init?.body !== undefined ? "POST" : "GET");
-    return this.run<T>({
-      method,
-      path,
-      routePath,
-      body: init?.body,
-      headers: init?.headers,
-      query: init?.query,
-    });
+    const callInit = init ?? {};
+    const reqCtx = await this.prepareRequest(path, callInit, routePath);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(reqCtx.url, this.buildRequestInit(reqCtx, callInit.timeout));
+    } catch (err) {
+      this.fail(reqCtx, 0, toRequestError(err));
+    }
+
+    return this.handleResponse<T>(reqCtx, response);
   }
 
-  /**
-   * Builds the request context, runs hooks, does
-   * the fetch, parses the response, runs hooks again, throws on non-2xx.
-   */
-  private async run<T>(args: {
-    method: HTTPMethod;
-    path: string;
-    routePath: string;
-    body: unknown;
-    headers: HeadersInit | undefined;
-    query: Record<string, string> | undefined;
-  }): Promise<T> {
-    const fullPath = this.normalizeRelativePath(this.opts.basePath, args.path, args.query);
-    const url = joinURL(this.opts.baseURL, fullPath);
+  private async prepareRequest(path: string, init: FetchInit, routePath: string): Promise<RequestContext> {
+    const fullPath = this.normalizeRelativePath(this.opts.basePath, path, init.query);
+    const reqCtx: RequestContext = {
+      method: init.method ?? (init.body !== undefined ? "POST" : "GET"),
+      fullPath,
+      path,
+      routePath,
+      url: joinURL(this.opts.baseURL, fullPath),
+      headers: this.buildHeaders(init.headers),
+      body: init.body,
+    };
+    return this.opts.hooks.runBeforeRequest(reqCtx);
+  }
 
-    const headers = new Headers({ ...args.headers, ...(this.opts.fetchOptions.headers ?? {}) });
+  private buildHeaders(extra: HeadersInit | undefined): Headers {
+    const headers = new Headers(this.opts.fetchOptions.headers);
+    new Headers(extra).forEach((value, key) => headers.set(key, value));
+
     if (!headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
     }
     if (!headers.has("Accept")) {
       headers.set("Accept", "application/json");
     }
+    return headers;
+  }
 
-    let reqCtx: RequestContext = {
-      method: args.method,
-      fullPath: fullPath,
-      path: args.path,
-      routePath: args.routePath,
-      url,
-      headers,
-      body: args.body,
-    };
-
-    reqCtx = await this.opts.hooks.runBeforeRequest(reqCtx);
-
-    const payload = reqCtx.body !== undefined && reqCtx.body !== null ? JSON.stringify(reqCtx.body) : undefined;
-
+  private buildRequestInit(reqCtx: RequestContext, timeout: number | undefined): RequestInit {
     const requestInit: RequestInit = {
       method: reqCtx.method,
       headers: reqCtx.headers,
       credentials: this.credentials,
     };
 
-    if (payload !== undefined) {
-      requestInit.body = payload;
+    if (reqCtx.body !== undefined && reqCtx.body !== null) {
+      requestInit.body = JSON.stringify(reqCtx.body);
     }
 
-    let response: Response;
+    const signal = this.timeoutSignal(timeout);
+    if (signal !== undefined) {
+      requestInit.signal = signal;
+    }
+
+    return requestInit;
+  }
+
+  private async handleResponse<T>(reqCtx: RequestContext, response: Response): Promise<T> {
+    // A non-JSON body on a 2xx response is treated as a failure.
+    let parsedBody: unknown;
+    let parseFailed = false;
     try {
-      response = await this.fetchImpl(reqCtx.url, requestInit);
-    } catch (err) {
-      this.opts.fetchOptions.onError?.({
-        ...reqCtx,
-        status: 0,
-        ok: false,
-        error: err as Error,
-      });
-      throw new LimenError(err instanceof Error ? err.message : "Network request failed", 0, "unknown");
+      parsedBody = await this.parseResponseBody(response);
+    } catch {
+      parseFailed = true;
     }
 
-    const parsedBody = await this.parseResponseBody(response);
-    const unwrapped =
-      response.ok && parsedBody !== undefined ? unwrapPayload(parsedBody, this.opts.envelope) : parsedBody;
+    const ok = response.ok && !parseFailed;
+    const unwrapped = ok && parsedBody !== undefined ? unwrapPayload(parsedBody, this.opts.envelope) : parsedBody;
 
-    let resCtx: ResponseContext = {
-      method: args.method,
-      fullPath: fullPath,
-      path: args.path,
-      routePath: args.routePath,
+    const resCtx = await this.opts.hooks.runAfterResponse({
+      method: reqCtx.method,
+      fullPath: reqCtx.fullPath,
+      path: reqCtx.path,
+      routePath: reqCtx.routePath,
       status: response.status,
-      ok: response.ok,
+      ok,
       headers: response.headers,
       body: unwrapped,
-    };
-
-    resCtx = await this.opts.hooks.runAfterResponse(resCtx);
+    });
 
     if (resCtx.ok) {
-      this.opts.fetchOptions.onSuccess?.({
-        ...resCtx,
-        response,
-      });
+      this.opts.fetchOptions.onSuccess?.({ ...resCtx, response });
       return resCtx.body as T;
     }
 
     const message =
-      unwrapErrorMessage(resCtx.body, this.opts.envelope) ??
-      response.statusText ??
-      `Request failed with status ${response.status}`;
+      parseFailed && response.ok
+        ? "Invalid JSON in response body"
+        : (unwrapErrorMessage(resCtx.body, this.opts.envelope) ??
+          response.statusText ??
+          `Request failed with status ${response.status}`);
+    this.fail(reqCtx, response.status, new LimenError(message, response.status, deriveErrorCode(response.status)));
+  }
 
-    const error = new LimenError(message, response.status, deriveErrorCode(response.status));
-    this.opts.fetchOptions.onError?.({
-      ...reqCtx,
-      status: response.status,
-      ok: false,
-      error,
-    });
+  private fail(reqCtx: RequestContext, status: number, error: LimenError): never {
+    this.opts.fetchOptions.onError?.({ ...reqCtx, status, ok: false, error });
     throw error;
+  }
+
+  private timeoutSignal(perCallTimeout: number | undefined): AbortSignal | undefined {
+    const timeoutMs = perCallTimeout ?? this.opts.fetchOptions.timeout ?? DEFAULT_TIMEOUT_MS;
+    if (timeoutMs <= 0 || typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function") {
+      return undefined;
+    }
+    return AbortSignal.timeout(timeoutMs);
   }
 
   private async parseResponseBody(response: Response): Promise<unknown> {
@@ -176,4 +172,13 @@ export class Fetcher {
     }
     return path;
   }
+}
+
+function toRequestError(err: unknown): LimenError {
+  if (err instanceof Error) {
+    if (err.name === "TimeoutError" || err.name === "AbortError") {
+      return new LimenError("Request timed out", 0, "timeout");
+    }
+  }
+  return new LimenError((err as Error)?.message ?? "Network request failed", 0, "unknown");
 }

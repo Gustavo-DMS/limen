@@ -1,5 +1,6 @@
 import type { RouteContext } from "./context";
 import type { LimenError } from "./errors";
+import type { FetchOptions } from "./plugin";
 import type { HTTPMethod } from "./types";
 
 declare const INPUT: unique symbol;
@@ -21,11 +22,8 @@ export type RouteHandler<I, O, TFields = unknown> = (
   http: HttpRunner<I>,
 ) => Promise<O>;
 
-/**
- * Per-call options accepted as the final argument of every generated route
- * method.
- */
-export type RouteCallOptions<O = unknown> = {
+/** Options accepted as the final argument of every route method. */
+export type RouteCallOptions<O = unknown> = FetchOptions & {
   /** Invoked with the resolved value after the call succeeds. */
   onSuccess?: (data: O) => void;
   /** Invoked with the error just before it is re-thrown. */

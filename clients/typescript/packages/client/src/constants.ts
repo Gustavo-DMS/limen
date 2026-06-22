@@ -15,3 +15,5 @@ export const SET_REFRESH_TOKEN_HEADER = "Set-Refresh-Token";
 
 /** Default `localStorage` key for the persisted tokens. */
 export const DEFAULT_TOKEN_STORAGE_KEY = "limen.tokens";
+
+export const DEFAULT_TIMEOUT_MS = 30_000;

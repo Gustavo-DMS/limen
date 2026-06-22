@@ -2,7 +2,7 @@ import type { AnyRouteContext } from "./context";
 import type { LimenError } from "./errors";
 import { camelizeEach } from "./helpers";
 import { resolvePath } from "./path";
-import type { FetchInit } from "./plugin";
+import type { FetchInit, FetchOptions } from "./plugin";
 import type { AnyRoute, HttpRunner, RouteCallOptions } from "./route";
 import { defaultSerialize } from "./serialize";
 import type { Session } from "./types";
@@ -11,7 +11,7 @@ import type { Session } from "./types";
  * Run the default HTTP steps for a route — merge defaults, resolve path params,
  * serialize, dispatch, parse — without applying session effects.
  */
-async function runHttp(ctx: AnyRouteContext, def: AnyRoute, input: unknown): Promise<unknown> {
+async function runHttp(ctx: AnyRouteContext, def: AnyRoute, input: unknown, callInit?: FetchOptions): Promise<unknown> {
   let merged = input;
   if (def.defaults !== undefined) {
     merged = { ...(def.defaults as Record<string, unknown>), ...((input ?? {}) as Record<string, unknown>) };
@@ -20,7 +20,7 @@ async function runHttp(ctx: AnyRouteContext, def: AnyRoute, input: unknown): Pro
   const { path, rest } = resolvePath(def.path, def.params, merged);
   const payload = def.serialize !== undefined ? def.serialize(rest) : defaultSerialize(rest);
 
-  const init: FetchInit = { method: def.method, absolute: def.absolute ?? false };
+  const init: FetchInit = { ...callInit, method: def.method, absolute: def.absolute ?? false };
   if (def.method === "GET" && payload !== undefined) {
     init.query = payload as Record<string, string>;
   } else {
@@ -53,9 +53,14 @@ async function applyEffects(ctx: AnyRouteContext, def: AnyRoute, result: unknown
   }
 }
 
-function makeHttpRunner(ctx: AnyRouteContext, def: AnyRoute, boundInput: unknown): HttpRunner<unknown> {
+function makeHttpRunner(
+  ctx: AnyRouteContext,
+  def: AnyRoute,
+  boundInput: unknown,
+  callInit?: FetchOptions,
+): HttpRunner<unknown> {
   const run = (override?: unknown): Promise<unknown> =>
-    runHttp(ctx, def, override === undefined ? boundInput : override);
+    runHttp(ctx, def, override === undefined ? boundInput : override, callInit);
   return run as HttpRunner<unknown>;
 }
 
@@ -68,11 +73,16 @@ function isSessionResponse(raw: unknown): raw is Session<unknown> {
  * owns all behaviour, including any effects), otherwise run the default
  * pipeline and apply declarative effects once at the top level.
  */
-async function dispatchRoute(ctx: AnyRouteContext, def: AnyRoute, input: unknown): Promise<unknown> {
+async function dispatchRoute(
+  ctx: AnyRouteContext,
+  def: AnyRoute,
+  input: unknown,
+  callInit?: FetchOptions,
+): Promise<unknown> {
   if (def.handler !== undefined) {
-    return def.handler(ctx, input, makeHttpRunner(ctx, def, input));
+    return def.handler(ctx, input, makeHttpRunner(ctx, def, input, callInit));
   }
-  const result = await runHttp(ctx, def, input);
+  const result = await runHttp(ctx, def, input, callInit);
   await applyEffects(ctx, def, result);
   return result;
 }
@@ -87,12 +97,13 @@ export async function runRoute(
   input: unknown,
   opts?: RouteCallOptions,
 ): Promise<unknown> {
+  const { onSuccess, onError, ...callInit }: RouteCallOptions = opts ?? {};
   try {
-    const result = await dispatchRoute(ctx, def, input);
-    opts?.onSuccess?.(result);
+    const result = await dispatchRoute(ctx, def, input, callInit);
+    onSuccess?.(result);
     return result;
   } catch (error) {
-    opts?.onError?.(error as LimenError);
+    onError?.(error as LimenError);
     throw error;
   }
 }

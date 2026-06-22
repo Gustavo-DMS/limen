@@ -64,13 +64,23 @@ export type FetchInit = {
   body?: unknown;
   /** Appended as `?k=v` query string. */
   query?: Record<string, string>;
-  /** Extra headers to merge with the defaults (`Content-Type`, `Accept`). */
+  /**
+   * Headers merged into the request, on top of the default `Content-Type` /
+   * `Accept`. A per-request value overrides the client default.
+   */
   headers?: HeadersInit;
   /**
    * Resolve `path` from the client base path instead of the plugin base path.
    */
   absolute?: boolean;
+  /**
+   * Request timeout in ms; `0` disables. Defaults to 30s. A per-request value
+   * overrides the client default.
+   */
+  timeout?: number;
 };
+
+export type FetchOptions = Omit<FetchInit, "method" | "body" | "query" | "absolute">;
 
 export type PluginIdOf<P> = P extends { readonly id: infer Id extends string } ? Id : never;
 

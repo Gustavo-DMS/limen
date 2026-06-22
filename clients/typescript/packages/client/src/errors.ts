@@ -6,6 +6,7 @@ export type LimenErrorCode =
   | "validation_error"
   | "conflict"
   | "server_error"
+  | "timeout"
   | "unknown";
 
 /** Map HTTP status → typed code. Anything unmapped becomes `"unknown"`. */
@@ -42,5 +43,9 @@ export class LimenError extends Error {
 
   get isRateLimited(): boolean {
     return this.code === "rate_limited";
+  }
+
+  get isTimeout(): boolean {
+    return this.code === "timeout";
   }
 }
