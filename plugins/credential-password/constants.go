@@ -3,7 +3,7 @@ package credentialpassword
 import "github.com/thecodearcher/limen"
 
 const (
-	defaultMinPasswordLength        = 4
+	defaultMinPasswordLength        = 8
 	defaultPasswordRequireUppercase = true
 	defaultPasswordRequireNumbers   = true
 	defaultPasswordRequireSymbols   = false
