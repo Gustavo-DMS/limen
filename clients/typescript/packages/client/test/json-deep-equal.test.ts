@@ -28,6 +28,11 @@ describe("deepJsonEqual", () => {
     expect(deepJsonEqual([], {})).toBe(false);
     expect(deepJsonEqual({ 0: "a" }, ["a"])).toBe(false);
     expect(deepJsonEqual(new Date("2026-06-20T00:00:00Z"), new Date("2026-06-20T00:00:00Z"))).toBe(false);
-    expect(deepJsonEqual(() => "x", () => "x")).toBe(false);
+    expect(
+      deepJsonEqual(
+        () => "x",
+        () => "x",
+      ),
+    ).toBe(false);
   });
 });

@@ -1,5 +1,3 @@
-export { VERSION } from "./version";
-
 export { createAuthClient } from "./client";
 
 export { deriveErrorCode, LimenError } from "./errors";
