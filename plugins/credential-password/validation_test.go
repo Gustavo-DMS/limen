@@ -28,7 +28,7 @@ func TestValidatePassword(t *testing.T) {
 		{name: "too short", password: "Ab1", wantErr: ErrPasswordTooShort},
 		{name: "no uppercase", password: "password1", wantErr: ErrPasswordRequiresUppercase},
 		{name: "no numbers", password: "Password", wantErr: ErrPasswordRequiresNumbers},
-		{name: "at minimum length", password: "Ab1x", wantErr: nil},
+		{name: "at minimum length", password: "Ab12345!", wantErr: nil},
 	}
 
 	for _, tt := range tests {
