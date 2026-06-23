@@ -3,7 +3,7 @@ module github.com/thecodearcher/limen/plugins/oauth-consentkeys
 go 1.25.0
 
 require (
-	github.com/thecodearcher/limen/plugins/oauth v0.1.0
+	github.com/thecodearcher/limen/plugins/oauth v0.1.1
 	golang.org/x/oauth2 v0.35.0
 )
 
