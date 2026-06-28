@@ -70,8 +70,7 @@ export type AuthClient<Plugins extends readonly AnyClientPlugin[], TFields = unk
     readonly baseURL: string;
     readonly basePath: string;
     /**
-     * Reactive session store holding `{ data, isPending, error }`. Read it with
-     * `.get()` / `.listen()` or a framework `useStore`.
+     * Reactive session store holding `{ data, isPending, error }`.
      */
     readonly $session: ReadableAtom<SessionState<PrettyUserFields<Plugins, TFields>>>;
   } & CoreContribution<PrettyUserFields<Plugins, TFields>> &
