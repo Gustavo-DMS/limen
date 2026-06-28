@@ -34,7 +34,7 @@ export function oauthClientPlugin() {
     route<void, OAuthAccount[]>()({
       method: "GET",
       path: "/accounts",
-      as: "social.accounts",
+      as: "social.listAccounts",
     }),
     route<{ provider: string }, OAuthTokens>()({
       method: "GET",

@@ -144,11 +144,11 @@ describe("createAuthClient — oauth path params + redirect handler", () => {
     expect(calls[1]?.url).toBe("http://localhost:8080/auth/oauth/google/tokens/refresh");
   });
 
-  it("social.accounts(): array response is camelized by the DEFAULT parse (no explicit `parse`)", async () => {
+  it("social.listAccounts(): array response is camelized by the DEFAULT parse (no explicit `parse`)", async () => {
     const { auth, calls } = setup(() => ({
       body: [{ provider: "google", provider_account_id: "u-1", scopes: ["email"], created_at: "t0", updated_at: "t1" }],
     }));
-    const accounts = await auth.social.accounts();
+    const accounts = await auth.social.listAccounts();
     expect(calls[0]?.url).toBe("http://localhost:8080/auth/oauth/accounts");
     expect(accounts).toEqual([
       { provider: "google", providerAccountId: "u-1", scopes: ["email"], createdAt: "t0", updatedAt: "t1" },
