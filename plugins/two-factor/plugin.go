@@ -82,6 +82,12 @@ func (t *twoFactorPlugin) PluginHTTPConfig() limen.PluginHTTPConfig {
 				},
 			},
 		},
+		RateLimitRules: []*limen.RateLimitRule{
+			limen.NewRateLimitRule("/initiate-setup", 10, time.Minute),
+			limen.NewRateLimitRule("/finalize-setup", 10, time.Minute),
+			limen.NewRateLimitRule("/disable", 10, time.Minute),
+			limen.NewRateLimitRule("/verify", 5, 10*time.Second),
+		},
 	}
 }
 
