@@ -26,10 +26,18 @@ jobs:
 
       - name: Run tests
         run: |
-          for dir in $(find . -name go.mod -not -path './examples/*' -not -path './clients/go.mod' -exec dirname {} \;); do
-            echo "=== testing $dir ==="
-            (cd "$dir" && go test -race -count=1 ./...)
-          done
+          go work init .
+
+          while IFS= read -r dir; do
+            go work use "$dir"
+          done < <(find . -name go.mod \
+            -not -path './examples/*' \
+            -not -path './clients/go.mod' \
+            -exec dirname {} \; | sort -u)
+
+          go work sync
+
+          go test work
 
   lint:
     name: Lint
