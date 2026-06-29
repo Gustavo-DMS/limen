@@ -70,7 +70,7 @@ func (a *twoFactorHandlers) FinalizeTwoFactorSetup(w http.ResponseWriter, r *htt
 		return
 	}
 
-	authResult, sessionResult, err := a.plugin.rotateSession(r, w, session)
+	authResult, sessionResult, err := a.plugin.core.RotateSession(r, w, session, a.plugin.config.revokeOtherSessionsOnStateChange)
 	if err != nil {
 		a.responder.Error(w, r, err)
 		return
@@ -101,7 +101,7 @@ func (a *twoFactorHandlers) Disable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authResult, sessionResult, err := a.plugin.rotateSession(r, w, session)
+	authResult, sessionResult, err := a.plugin.core.RotateSession(r, w, session, a.plugin.config.revokeOtherSessionsOnStateChange)
 	if err != nil {
 		a.responder.Error(w, r, err)
 		return

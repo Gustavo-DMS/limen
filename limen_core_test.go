@@ -84,3 +84,64 @@ func TestLimenHTTPCore_IsTrustedOrigin(t *testing.T) {
 	assert.False(t, httpCore.IsTrustedOrigin("http://localhost:2080"))
 	assert.False(t, httpCore.IsTrustedOrigin("https://evil.com"))
 }
+
+func rotateValidatedSession(user *User, sess *SessionResult) *ValidatedSession {
+	return &ValidatedSession{
+		User:    user,
+		Session: &Session{Token: sess.Token, UserID: user.ID},
+	}
+}
+
+func rotateRequest(t *testing.T, sess *SessionResult) *http.Request {
+	t.Helper()
+	r := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/session", nil)
+	if sess.Cookie != nil {
+		r.AddCookie(sess.Cookie)
+	}
+	return r
+}
+
+func TestRotateSession(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		revokeAll        bool
+		wantOtherRevoked bool
+	}{
+		{name: "revoke current only", revokeAll: false, wantOtherRevoked: false},
+		{name: "revoke all sessions", revokeAll: true, wantOtherRevoked: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			l, core := NewTestLimen(t)
+			email := tt.name + "@example.com"
+			user := SeedTestUser(t, l, email)
+			currentSess := SeedTestSession(t, l, user.ID, email)
+			otherSess := SeedTestSession(t, l, user.ID, email)
+
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/rotate", nil)
+			req.AddCookie(currentSess.Cookie)
+			w := httptest.NewRecorder()
+
+			_, newSess, err := core.RotateSession(req, w, rotateValidatedSession(user, currentSess), tt.revokeAll)
+			require.NoError(t, err)
+			assert.NotEqual(t, currentSess.Token, newSess.Token, "new session token must differ from old")
+
+			_, err = l.GetSession(rotateRequest(t, currentSess))
+			assert.Error(t, err, "current session must be revoked after rotation")
+
+			_, err = l.GetSession(rotateRequest(t, otherSess))
+			if tt.wantOtherRevoked {
+				assert.Error(t, err, "other sessions must be revoked when revokeAll is true")
+			} else {
+				assert.NoError(t, err, "other sessions must be preserved when revokeAll is false")
+			}
+
+			_, err = l.GetSession(rotateRequest(t, newSess))
+			assert.NoError(t, err, "newly issued session must be valid")
+		})
+	}
+}

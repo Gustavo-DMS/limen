@@ -98,3 +98,31 @@ func (c *LimenCore) CreateSession(ctx context.Context, r *http.Request, w http.R
 	}
 	return c.SessionManager.CreateSession(ctx, r, auth, createOpts.ShortSession)
 }
+
+// RotateSession revokes the caller's current session (or all of the user's
+// sessions when revokeAll is true) and issues a fresh session for the same
+// user. The user is re-loaded from the database so the new session and
+// response reflect any state changed earlier in the request.
+func (c *LimenCore) RotateSession(r *http.Request, w http.ResponseWriter, session *ValidatedSession, revokeAll bool) (*AuthenticationResult, *SessionResult, error) {
+	ctx := r.Context()
+
+	if revokeAll {
+		_ = c.SessionManager.RevokeAllSessions(ctx, session.User.ID)
+	} else {
+		_ = c.SessionManager.RevokeSession(ctx, session.Session.Token)
+	}
+
+	user, err := c.DBAction.FindUserByID(ctx, session.User.ID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	authResult := &AuthenticationResult{User: user}
+
+	sessionResult, err := c.CreateSession(ctx, r, w, authResult)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return authResult, sessionResult, nil
+}
