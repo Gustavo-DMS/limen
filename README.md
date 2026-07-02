@@ -18,6 +18,7 @@
 
 <p align="center">
   <a href="https://pkg.go.dev/github.com/thecodearcher/limen"><img src="https://img.shields.io/badge/reference-pkg.go.dev-ffffff?style=flat&colorA=000000&colorB=000000&logo=go&logoColor=white" alt="Go reference" /></a>
+  <a href="https://www.npmjs.com/package/limen-auth"><img src="https://img.shields.io/npm/v/limen-auth?style=flat&colorA=000000&colorB=000000&logo=npm&logoColor=white" alt="npm version" /></a>
   <a href="https://github.com/thecodearcher/limen/stargazers"><img src="https://img.shields.io/github/stars/thecodearcher/limen?style=flat&colorA=000000&colorB=000000&logo=github" alt="GitHub stars" /></a>
 
 </p>
