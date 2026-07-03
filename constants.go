@@ -37,6 +37,7 @@ const (
 	PluginOAuth              PluginName = "oauth"
 	PluginSessionJWT         PluginName = "session-jwt"
 	PluginMagicLink          PluginName = "magic-link"
+	PluginAPIKey             PluginName = "api-key"
 )
 
 // ============================================================================
@@ -148,8 +149,6 @@ const (
 	ColumnTypeBool ColumnType = "bool"
 	// ColumnTypeTime represents the time.Time type
 	ColumnTypeTime ColumnType = "time.Time"
-	// ColumnTypeAny represents the any type
-	ColumnTypeAny ColumnType = "any"
 	// ColumnTypeMapStringAny represents the map[string]any type
 	ColumnTypeMapStringAny ColumnType = "map[string]any"
 )

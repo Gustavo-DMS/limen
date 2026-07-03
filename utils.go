@@ -263,12 +263,25 @@ func isValidCoreSchema(name string) bool {
 	}
 }
 
-func getNullableValue[T any](value any) *T {
+func GetNullableValue[T any](value any) *T {
 	if value == nil {
 		return nil
 	}
-	v := value.(T)
-	return &v
+	if v, ok := value.(T); ok {
+		return &v
+	}
+	return nil
+}
+
+func GetValue[T any](value any) T {
+	var zero T
+	if value == nil {
+		return zero
+	}
+	if v, ok := value.(T); ok {
+		return v
+	}
+	return zero
 }
 
 func getString(v any) string {

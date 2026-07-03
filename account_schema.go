@@ -113,7 +113,7 @@ func (s *AccountSchema) FromStorage(data map[string]any) Model {
 		ProviderAccountID:    getString(data[s.GetProviderAccountIDField()]),
 		AccessToken:          getString(data[s.GetAccessTokenField()]),
 		RefreshToken:         getString(data[s.GetRefreshTokenField()]),
-		AccessTokenExpiresAt: getNullableValue[time.Time](data[s.GetAccessTokenExpiresAtField()]),
+		AccessTokenExpiresAt: GetNullableValue[time.Time](data[s.GetAccessTokenExpiresAtField()]),
 		IDToken:              getString(data[s.GetIDTokenField()]),
 		CreatedAt:            getTime(data[s.GetCreatedAtField()]),
 		UpdatedAt:            getTime(data[s.GetUpdatedAtField()]),

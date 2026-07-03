@@ -163,7 +163,7 @@ func (t *twoFactorPlugin) GetSchemas(schema *limen.SchemaConfig) []limen.SchemaI
 	userWithTwoFactorExtension := limen.NewSchemaDefinitionForExtension(
 		limen.CoreSchemaUsers,
 		userWithTwoFactorSchema,
-		limen.WithSchemaField(string(UserWithTwoFactorSchemaEnabledField), limen.ColumnTypeBool, limen.WithDefaultValue("false"), limen.WithNullable(false)),
+		limen.WithSchemaField(UserWithTwoFactorSchemaEnabledField, limen.ColumnTypeBool, limen.WithDefaultValue("false"), limen.WithNullable(false)),
 	)
 
 	twoFactorTable := limen.NewSchemaDefinitionForTable(
@@ -171,9 +171,9 @@ func (t *twoFactorPlugin) GetSchemas(schema *limen.SchemaConfig) []limen.SchemaI
 		TwoFactorSchemaTableName,
 		twoFactorSchema,
 		limen.WithSchemaIDField(schema),
-		limen.WithSchemaField(string(TwoFactorSchemaUserIDField), schema.GetIDColumnType()),
-		limen.WithSchemaField(string(TwoFactorSchemaSecretField), limen.ColumnTypeString, limen.WithNullable(true)),
-		limen.WithSchemaField(string(TwoFactorSchemaBackupCodesField), limen.ColumnTypeText, limen.WithNullable(true)),
+		limen.WithSchemaField(TwoFactorSchemaUserIDField, schema.GetIDColumnType()),
+		limen.WithSchemaField(TwoFactorSchemaSecretField, limen.ColumnTypeString, limen.WithNullable(true)),
+		limen.WithSchemaField(TwoFactorSchemaBackupCodesField, limen.ColumnTypeText, limen.WithNullable(true)),
 		limen.WithSchemaForeignKey(limen.ForeignKeyDefinition{
 			Name:             "fk_two_factors_users_user_id",
 			Column:           TwoFactorSchemaUserIDField,

@@ -109,11 +109,11 @@ func WithSchemaIDField(config *SchemaConfig) SchemaDefinitionOption {
 
 // WithSchemaField adds a field to the schema.
 // If the logical field name is not provided, it will be set to the name parameter.
-func WithSchemaField(name string, columnType ColumnType, opts ...ColumnDefinitionOption) SchemaDefinitionOption {
+func WithSchemaField(name SchemaField, columnType ColumnType, opts ...ColumnDefinitionOption) SchemaDefinitionOption {
 	return func(d *SchemaDefinition) {
 		field := ColumnDefinition{
-			Name:         name,
-			LogicalField: SchemaField(name),
+			Name:         string(name),
+			LogicalField: name,
 			Type:         columnType,
 			IsNullable:   false,
 			IsPrimaryKey: false,
