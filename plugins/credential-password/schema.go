@@ -11,5 +11,5 @@ type CredentialPasswordUserSchema struct {
 
 // GetUsernameField returns the resolved username field column name.
 func (s *CredentialPasswordUserSchema) GetUsernameField() string {
-	return s.GetField("username")
+	return s.GetField(CredentialPasswordUserSchemaUsernameField)
 }

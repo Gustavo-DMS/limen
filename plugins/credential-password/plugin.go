@@ -23,7 +23,7 @@ func (p *credentialPasswordPlugin) getUsernameField() string {
 	if !p.config.enableUsername {
 		return ""
 	}
-	return p.userSchema.GetField("username")
+	return p.userSchema.GetField(CredentialPasswordUserSchemaUsernameField)
 }
 
 // Config defines the configuration for the credential password plugin.
@@ -90,7 +90,7 @@ func (p *credentialPasswordPlugin) GetSchemas(schema *limen.SchemaConfig) []lime
 	extension := limen.NewSchemaDefinitionForExtension(
 		limen.CoreSchemaUsers,
 		userWithUsername,
-		limen.WithSchemaField("username", limen.ColumnTypeString, limen.WithNullable(true)),
+		limen.WithSchemaField(CredentialPasswordUserSchemaUsernameField, limen.ColumnTypeString, limen.WithNullable(true)),
 		limen.WithSchemaIndex("idx_users_username", []limen.SchemaField{CredentialPasswordUserSchemaUsernameField}),
 	)
 

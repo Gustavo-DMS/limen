@@ -135,3 +135,12 @@ func WithRequireUsernameOnSignUp(requireUsername bool) ConfigOption {
 		}
 	}
 }
+
+// WithUsernameField remaps the username column in the user schema.
+func WithUsernameField(columnName string) limen.SchemaConfigOption {
+	return limen.WithPluginSchema(
+		limen.PluginCredentialPassword,
+		limen.CoreSchemaUsers,
+		limen.WithPluginFieldName(CredentialPasswordUserSchemaUsernameField, columnName),
+	)
+}

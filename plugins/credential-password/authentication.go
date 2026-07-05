@@ -71,7 +71,7 @@ func (p *credentialPasswordPlugin) SignUpWithCredentialAndPassword(ctx context.C
 		return nil, err
 	}
 
-	username := strings.TrimSpace(limen.GetFromMap[string](additionalFields, "username"))
+	username := strings.TrimSpace(limen.GetFromMap[string](additionalFields, string(CredentialPasswordUserSchemaUsernameField)))
 
 	if p.config.enableUsername && username != "" {
 		usernameExists, err := p.checkUsernameExists(ctx, username)
@@ -82,9 +82,9 @@ func (p *credentialPasswordPlugin) SignUpWithCredentialAndPassword(ctx context.C
 		if usernameExists {
 			return nil, ErrUsernameAlreadyExists
 		}
-
-		additionalFields[p.getUsernameField()] = username
 	}
+
+	additionalFields = p.setUsernameField(additionalFields, username)
 
 	userExists, err := p.checkEmailExists(ctx, user.Email)
 	if err != nil {
@@ -132,6 +132,15 @@ func (p *credentialPasswordPlugin) SignUpWithCredentialAndPassword(ctx context.C
 	}
 
 	return &limen.AuthenticationResult{User: user}, nil
+}
+
+func (p *credentialPasswordPlugin) setUsernameField(additionalFields map[string]any, username string) map[string]any {
+	delete(additionalFields, string(CredentialPasswordUserSchemaUsernameField))
+	if username == "" {
+		return additionalFields
+	}
+	additionalFields[p.getUsernameField()] = username
+	return additionalFields
 }
 
 func (p *credentialPasswordPlugin) checkUsernameExists(ctx context.Context, username string) (bool, error) {
